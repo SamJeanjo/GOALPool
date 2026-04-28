@@ -10,7 +10,7 @@ export function ScoreBadge({ completed }: { completed: boolean }) {
     <span
       className={cn(
         "rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-wide",
-        completed ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500",
+        completed ? "bg-[#D4AF37]/15 text-[#F6D66B]" : "bg-white/[0.06] text-slate-500",
       )}
     >
       {completed ? "Picked" : "Open"}
@@ -41,10 +41,11 @@ export function MatchCard({
     <motion.div
       layout
       whileHover={readonly ? undefined : { y: -3 }}
-      className="relative w-[220px] shrink-0 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm"
+      whileTap={readonly ? undefined : { scale: 0.985 }}
+      className="relative w-[220px] shrink-0 rounded-2xl border border-white/10 bg-[#0B111A]/90 p-2.5 shadow-2xl shadow-black/20 backdrop-blur transition hover:border-[#D4AF37]/30"
     >
       <div className="mb-2 flex items-center justify-between px-1">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
           Match {match.position + 1}
         </span>
         <ScoreBadge completed={completed} />
@@ -67,7 +68,7 @@ export function MatchCard({
           <TeamPill team={teamB} selected={match.winnerTeamId === match.teamBId} locked={locked} score={match.scoreB} />
         </button>
       </div>
-      {completed ? <div className="absolute -right-4 top-1/2 hidden h-px w-8 bg-gradient-to-r from-blue-500 to-emerald-400 lg:block" /> : null}
+      {completed ? <div className="absolute -right-4 top-1/2 hidden h-px w-8 bg-gradient-to-r from-[#D4AF37] to-transparent lg:block" /> : null}
     </motion.div>
   );
 }

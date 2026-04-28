@@ -1,5 +1,5 @@
 import { BracketCanvas, ShareBracketButton } from "@/components/goalpool/BracketCanvas";
-import { featuredBracket } from "@/lib/goalpool-data";
+import { featuredBracket } from "@/lib/tournament-data";
 
 export default async function PublicBracketPage({
   params,
@@ -9,12 +9,14 @@ export default async function PublicBracketPage({
   const { share_slug } = await params;
 
   return (
-    <div>
-      <div className="bg-white px-4 py-4 shadow-sm">
+    <div className="bg-[#05070A] text-white">
+      <div className="border-b border-white/10 bg-[#07111F]/90 px-4 py-4 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div>
-            <p className="text-[13px] font-bold uppercase tracking-wide text-blue-600">Shared bracket</p>
-            <h1 className="text-xl font-black text-slate-950">{share_slug === featuredBracket.shareSlug ? featuredBracket.name : "GoalPool shared bracket"}</h1>
+            <p className="text-[13px] font-bold uppercase tracking-wide text-[#D4AF37]">Shared bracket</p>
+            <h1 className="text-xl font-semibold text-white">
+              {share_slug === featuredBracket.shareSlug ? featuredBracket.name : "GoalPool shared bracket"}
+            </h1>
           </div>
           <ShareBracketButton bracket={{ ...featuredBracket, shareSlug: share_slug }} />
         </div>

@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
+    --background: 216 33% 3%;
+    --foreground: 45 36% 92%;
+    --card: 215 31% 7%;
+    --card-foreground: 45 36% 92%;
+    --popover: 215 31% 7%;
+    --popover-foreground: 45 36% 92%;
+    --primary: 45 65% 52%;
+    --primary-foreground: 216 33% 3%;
+    --secondary: 215 28% 12%;
+    --secondary-foreground: 45 36% 92%;
+    --muted: 215 28% 12%;
+    --muted-foreground: 218 12% 65%;
+    --accent: 45 96% 53%;
+    --accent-foreground: 216 33% 3%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 215 23% 18%;
+    --input: 215 23% 18%;
+    --ring: 45 65% 52%;
     --radius: 1rem;
     --chart-1: 221 83% 53%;
     --chart-2: 142 71% 45%;
@@ -41,6 +41,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    background:
+      radial-gradient(circle at top left, rgb(212 175 55 / 0.16), transparent 34rem),
+      radial-gradient(circle at 85% 12%, rgb(37 99 235 / 0.18), transparent 34rem),
+      #05070a;
   }
 
   button,
@@ -51,11 +55,23 @@
 
 @layer utilities {
   .goal-gradient {
-    background-image: linear-gradient(135deg, #2563eb 0%, #22c55e 100%);
+    background-image: linear-gradient(135deg, #d4af37 0%, #facc15 48%, #b88a21 100%);
   }
 
   .board-shadow {
-    box-shadow: 0 18px 60px rgb(15 23 42 / 0.08);
+    box-shadow: 0 24px 90px rgb(0 0 0 / 0.38), 0 0 60px rgb(212 175 55 / 0.08);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 0 1px rgb(212 175 55 / 0.24), 0 24px 80px rgb(212 175 55 / 0.12);
+  }
+
+  .dark-noise {
+    background-image:
+      radial-gradient(circle at top, rgb(212 175 55 / 0.1), transparent 36rem),
+      linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.02) 1px, transparent 1px);
+    background-size: auto, 38px 38px, 38px 38px;
   }
 
   .scrollbar-none {
