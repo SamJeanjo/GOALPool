@@ -1,5 +1,8 @@
 import { ArrowRight, BarChart3, CheckCircle2, Link2, MousePointer2, Trophy, Users } from "lucide-react";
 import { BracketCanvas } from "@/components/goalpool/BracketCanvas";
+import { EmailCapture } from "@/components/goalpool/EmailCapture";
+import { FollowTeamsPanel } from "@/components/goalpool/FollowTeamsPanel";
+import { GlobalLeaderboard } from "@/components/goalpool/GlobalLeaderboard";
 import { featuredBracket, groups, tournament } from "@/lib/tournament-data";
 
 const stats = ["48 teams", "12 groups", "104 matches", "32-team knockout"];
@@ -93,6 +96,9 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+            <div className="mt-6 max-w-xl">
+              <EmailCapture />
+            </div>
           </div>
           <div className="grid gap-4">
             <BracketPreviewCard />
@@ -119,6 +125,11 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-16 md:px-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <FollowTeamsPanel />
+        <GlobalLeaderboard />
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">

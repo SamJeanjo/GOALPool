@@ -28,6 +28,36 @@ export type Match = {
   scoreB?: number;
 };
 
+export type ScheduledMatch = {
+  id: number;
+  stage: "Group Stage" | "Round of 32" | "Round of 16" | "Quarterfinal" | "Semifinal" | "Final";
+  date: string;
+  localTime: string;
+  city: string;
+  country: string;
+  venue: string;
+  teamAId?: string;
+  teamBId?: string;
+  teamALabel?: string;
+  teamBLabel?: string;
+  status: "scheduled" | "live" | "final";
+  scoreA?: number;
+  scoreB?: number;
+  source: "Official schedule release" | "Projected schedule slot";
+};
+
+export type LeaderboardScope = {
+  rank: number;
+  name: string;
+  bracket: string;
+  points: number;
+  champion: string;
+  trend: string;
+  continent: string;
+  country: string;
+  city: string;
+};
+
 export type BracketPick = Record<string, string>;
 
 export type Bracket = {
@@ -46,7 +76,17 @@ export const tournament = {
   dates: "June 11 to July 19, 2026",
   hosts: ["Canada", "Mexico", "United States"],
   format: "48 teams, 12 demo groups, 32-team knockout bracket",
-  note: "Demo groups only. Final groups should be updated after the official final tournament draw is available.",
+  note: "Demo groups only. Final groups and schedule placeholders should be updated when the official final tournament draw is available.",
+  sources: [
+    {
+      label: "Official schedule release",
+      url: "https://tickets.fifa.com/organisation/media-releases/updated-world-cup-2026-match-schedule-venues-kick-off-times-104-matches",
+    },
+    {
+      label: "Official qualified teams tracker",
+      url: "https://www.fifa.com/en/articles/world-cup-2026-who-has-qualified",
+    },
+  ],
 };
 
 const qualifiedTeams = [
@@ -196,11 +236,150 @@ export const featuredBracket: Bracket = {
 };
 
 export const leaderboardRows = [
-  { rank: 1, name: "Maya C.", bracket: "Gold Path", points: 74, champion: "Argentina", trend: "+12" },
-  { rank: 2, name: "Leo M.", bracket: "North Hosts", points: 68, champion: "Brazil", trend: "+8" },
-  { rank: 3, name: "Nora S.", bracket: "Clean Sheet", points: 61, champion: "United States", trend: "+4" },
-  { rank: 4, name: "Ari P.", bracket: "Knockout Map", points: 56, champion: "Colombia", trend: "+2" },
+  { rank: 1, name: "Maya C.", bracket: "Gold Path", points: 74, champion: "Argentina", trend: "+12", continent: "North America", country: "United States", city: "New York" },
+  { rank: 2, name: "Leo M.", bracket: "North Hosts", points: 68, champion: "Brazil", trend: "+8", continent: "North America", country: "Canada", city: "Toronto" },
+  { rank: 3, name: "Nora S.", bracket: "Clean Sheet", points: 61, champion: "United States", trend: "+4", continent: "Europe", country: "England", city: "London" },
+  { rank: 4, name: "Ari P.", bracket: "Knockout Map", points: 56, champion: "Colombia", trend: "+2", continent: "South America", country: "Colombia", city: "Bogota" },
+  { rank: 5, name: "Yuki T.", bracket: "Tokyo Press", points: 53, champion: "Japan", trend: "+6", continent: "Asia", country: "Japan", city: "Tokyo" },
+  { rank: 6, name: "Sam R.", bracket: "Atlas Route", points: 49, champion: "Morocco", trend: "+3", continent: "Africa", country: "Morocco", city: "Casablanca" },
+] satisfies LeaderboardScope[];
+
+const officialScheduleHighlights: ScheduledMatch[] = [
+  {
+    id: 1,
+    stage: "Group Stage",
+    date: "2026-06-11",
+    localTime: "13:00",
+    city: "Mexico City",
+    country: "Mexico",
+    venue: "Mexico City Stadium",
+    teamAId: "mex",
+    teamALabel: "Mexico",
+    teamBLabel: "South Africa",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 2,
+    stage: "Group Stage",
+    date: "2026-06-12",
+    localTime: "15:00",
+    city: "Toronto",
+    country: "Canada",
+    venue: "Toronto Stadium",
+    teamAId: "can",
+    teamALabel: "Canada",
+    teamBLabel: "European play-off winner",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 3,
+    stage: "Group Stage",
+    date: "2026-06-12",
+    localTime: "18:00",
+    city: "Los Angeles",
+    country: "United States",
+    venue: "Los Angeles Stadium",
+    teamAId: "usa",
+    teamALabel: "United States",
+    teamBId: "par",
+    teamBLabel: "Paraguay",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 4,
+    stage: "Group Stage",
+    date: "2026-06-13",
+    localTime: "18:00",
+    city: "New York New Jersey",
+    country: "United States",
+    venue: "New York New Jersey Stadium",
+    teamAId: "bra",
+    teamALabel: "Brazil",
+    teamBId: "mar",
+    teamBLabel: "Morocco",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 10,
+    stage: "Group Stage",
+    date: "2026-06-14",
+    localTime: "12:00",
+    city: "Houston",
+    country: "United States",
+    venue: "Houston Stadium",
+    teamALabel: "Curacao",
+    teamBLabel: "Germany",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 25,
+    stage: "Group Stage",
+    date: "2026-06-17",
+    localTime: "15:00",
+    city: "Dallas",
+    country: "United States",
+    venue: "Dallas Stadium",
+    teamALabel: "England",
+    teamBLabel: "Croatia",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
+  {
+    id: 44,
+    stage: "Group Stage",
+    date: "2026-06-20",
+    localTime: "22:00",
+    city: "Monterrey",
+    country: "Mexico",
+    venue: "Monterrey Stadium",
+    teamAId: "tun",
+    teamALabel: "Tunisia",
+    teamBId: "jpn",
+    teamBLabel: "Japan",
+    status: "scheduled",
+    source: "Official schedule release",
+  },
 ];
+
+const projectedScheduleSlots: ScheduledMatch[] = Array.from({ length: 104 }, (_, index) => {
+  const matchNumber = index + 1;
+  const isKnown = officialScheduleHighlights.find((match) => match.id === matchNumber);
+  if (isKnown) return isKnown;
+
+  const stage: ScheduledMatch["stage"] =
+    matchNumber <= 72
+      ? "Group Stage"
+      : matchNumber <= 88
+        ? "Round of 32"
+        : matchNumber <= 96
+          ? "Round of 16"
+          : matchNumber <= 100
+            ? "Quarterfinal"
+            : matchNumber <= 102
+              ? "Semifinal"
+              : "Final";
+
+  return {
+    id: matchNumber,
+    stage,
+    date: matchNumber <= 72 ? "2026-06-11" : "2026-06-28",
+    localTime: "TBD",
+    city: "TBD",
+    country: "TBD",
+    venue: "TBD",
+    teamALabel: stage === "Group Stage" ? `Team slot ${matchNumber}A` : `${stage} slot A`,
+    teamBLabel: stage === "Group Stage" ? `Team slot ${matchNumber}B` : `${stage} slot B`,
+    status: "scheduled",
+    source: "Projected schedule slot",
+  };
+});
+
+export const scheduledMatches = projectedScheduleSlots;
 
 const roundOrder: Array<Exclude<RoundKey, "champion">> = ["r32", "r16", "qf", "sf", "final"];
 

@@ -89,6 +89,22 @@ create table if not exists public.scoring_rules (
   unique (tournament_id, round)
 );
 
+create table if not exists public.email_leads (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  source text default 'landing',
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.user_followed_teams (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  email text,
+  tournament_id uuid not null references public.tournaments(id) on delete cascade,
+  team_id uuid not null references public.teams(id) on delete cascade,
+  created_at timestamp with time zone default now()
+);
+
 create index if not exists teams_tournament_seed_idx on public.teams(tournament_id, seed);
 create index if not exists matches_tournament_round_idx on public.matches(tournament_id, round, position);
 create index if not exists bracket_picks_bracket_idx on public.bracket_picks(bracket_id);
@@ -103,6 +119,8 @@ alter table public.bracket_picks enable row level security;
 alter table public.pools enable row level security;
 alter table public.pool_members enable row level security;
 alter table public.scoring_rules enable row level security;
+alter table public.email_leads enable row level security;
+alter table public.user_followed_teams enable row level security;
 
 create policy "profiles are readable by authenticated users" on public.profiles
   for select to authenticated using (true);
@@ -121,6 +139,12 @@ create policy "matches are public" on public.matches
 
 create policy "scoring rules are public" on public.scoring_rules
   for select to anon, authenticated using (true);
+
+create policy "anyone can join email waitlist" on public.email_leads
+  for insert to anon, authenticated with check (email is not null);
+
+create policy "authenticated users can manage followed teams" on public.user_followed_teams
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "public brackets can be read" on public.brackets
   for select to anon, authenticated using (visibility = 'public' or user_id = auth.uid());
