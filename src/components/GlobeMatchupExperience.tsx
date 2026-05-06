@@ -165,13 +165,6 @@ export function GlobeMatchupExperience() {
                   }));
                   setKnockoutPicks({});
                 }}
-                onMarkerPick={(team) => {
-                  setGroupSelections((current) => ({
-                    ...current,
-                    [groups[activeIndex].id]: cycleGroupRank(current[groups[activeIndex].id] ?? {}, team.id),
-                  }));
-                  setKnockoutPicks({});
-                }}
                 onPrevious={() => setStageIndex("groups", activeIndex - 1)}
                 onNext={() => setStageIndex("groups", activeIndex + 1)}
               />
@@ -312,7 +305,6 @@ function GroupGlobeCard({
   index,
   total,
   onRankPick,
-  onMarkerPick,
   onPrevious,
   onNext,
 }: {
@@ -321,14 +313,13 @@ function GroupGlobeCard({
   index: number;
   total: number;
   onRankPick: (team: Team, rank: RankKey) => void;
-  onMarkerPick: (team: Team) => void;
   onPrevious: () => void;
   onNext: () => void;
 }) {
   return (
     <motion.div key={group.id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative min-h-[720px] overflow-hidden rounded-[30px] bg-[#020407]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgb(255_255_255_/_0.12),transparent_30rem),linear-gradient(180deg,transparent,rgb(0_0_0_/_0.66))]" />
-      <GroupGlobeVisual group={group} selection={selection} onMarkerPick={onMarkerPick} />
+      <AtmosphericGlobe />
 
       <div className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between">
         <div>
@@ -366,59 +357,21 @@ function GroupGlobeCard({
   );
 }
 
-function GroupGlobeVisual({
-  group,
-  selection,
-  onMarkerPick,
-}: {
-  group: { id: string; teams: Team[] };
-  selection: { first?: string; second?: string; third?: string };
-  onMarkerPick: (team: Team) => void;
-}) {
+function AtmosphericGlobe() {
   return (
-    <div className="absolute left-1/2 top-[42%] h-[660px] w-[660px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-[#050505] shadow-[inset_-70px_-65px_110px_rgb(0_0_0_/_0.88),inset_38px_28px_80px_rgb(255_255_255_/_0.2),0_0_100px_rgb(255_255_255_/_0.14)]">
+    <div className="absolute left-1/2 top-[42%] h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-[#050505] shadow-[inset_-80px_-70px_120px_rgb(0_0_0_/_0.9),inset_42px_30px_90px_rgb(255_255_255_/_0.22),0_0_120px_rgb(34_197_94_/_0.08),0_0_160px_rgb(37_99_235_/_0.12)]">
       <div className="absolute inset-0 overflow-hidden rounded-full">
-        <div className="globe-grid absolute inset-0 opacity-55" />
-        <WorldMapLayer />
-        {group.teams.map((team) => {
-          const point = project(team);
-          return (
-            <FloatingFlag
-              key={team.id}
-              team={team}
-              x={point.x}
-              y={point.y}
-              rank={rankForTeam(selection, team.id)}
-              onClick={() => onMarkerPick(team)}
-            />
-          );
-        })}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 42, repeat: Infinity, ease: "linear" }}
+          className="atmospheric-globe-texture absolute -inset-[8%] rounded-full"
+        />
+        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_18%,rgb(255_255_255_/_0.34),transparent_14%),radial-gradient(circle_at_60%_44%,rgb(255_255_255_/_0.08),transparent_28%),linear-gradient(90deg,rgb(255_255_255_/_0.08),transparent_32%,transparent_70%,rgb(255_255_255_/_0.12))]" />
+        <div className="absolute inset-[8%] rounded-full border border-white/6" />
+        <div className="absolute left-[16%] top-[18%] h-28 w-44 rotate-[-18deg] rounded-full bg-white/10 blur-2xl" />
       </div>
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_34%_18%,rgb(255_255_255_/_0.34),transparent_16%),linear-gradient(90deg,rgb(255_255_255_/_0.08),transparent_32%,transparent_70%,rgb(255_255_255_/_0.12))]" />
+      <div className="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgb(255_255_255_/_0.08),transparent_66%)] blur-xl" />
     </div>
-  );
-}
-
-function FloatingFlag({ team, x, y, rank, onClick }: { team: Team; x: number; y: number; rank?: RankKey; onClick: () => void }) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileHover={{ y: -4, scale: 1.05 }}
-      whileTap={{ scale: 0.96 }}
-      className={cn(
-        "absolute z-30 -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-black/70 p-1.5 backdrop-blur transition",
-        rank === "first" && "border-yellow-300 shadow-[0_0_30px_rgb(250_204_21_/_0.62)]",
-        rank === "second" && "border-slate-100 shadow-[0_0_28px_rgb(226_232_240_/_0.5)]",
-        rank === "third" && "border-amber-700 shadow-[0_0_28px_rgb(180_83_9_/_0.52)]",
-        !rank && "border-white/18 shadow-[0_0_22px_rgb(0_0_0_/_0.42)]",
-      )}
-      style={{ left: `${x}%`, top: `${y}%` }}
-      aria-label={`Select ${team.name}`}
-    >
-      <FlagImage team={team} className="h-9 w-12 rounded-md object-cover" />
-      <span className="mt-1 block text-center text-[10px] font-black text-white">{team.countryCode}</span>
-    </motion.button>
   );
 }
 
@@ -484,27 +437,6 @@ function GlobeVisual({ teamA, teamB }: { teamA: Team; teamB: Team }) {
 
 function LandMass({ className }: { className: string }) {
   return <div className={cn("absolute rounded-[45%_55%_42%_58%] bg-white shadow-[0_0_18px_rgb(255_255_255_/_0.2)]", className)} />;
-}
-
-function WorldMapLayer() {
-  return (
-    <svg className="absolute inset-[4%] h-[92%] w-[92%] opacity-95" viewBox="0 0 1000 500" aria-hidden="true">
-      <g fill="rgba(245,248,252,0.94)" filter="url(#softGlow)">
-        <path d="M100 92 154 54l88 12 58 42-8 62 42 37-38 42-76-6-48 38-64-20-46-70 28-42-22-28z" />
-        <path d="M247 263 311 291l38 74-25 80-44 40-38-66 8-52-38-46z" />
-        <path d="M463 108 516 92l46 22 57-2 40 31-58 34-62-8-52 19-44-28z" />
-        <path d="M515 202 590 187l52 48 13 88-28 88-62-15-35-72-47-31 8-55z" />
-        <path d="M662 129 762 88l112 48 58 76-38 48-99-17-44 50-90-35-53-78z" />
-        <path d="M783 351 854 326l58 34 8 58-66 25-60-26z" />
-        <path d="M424 74 448 61l20 16-16 25-32-5z" />
-      </g>
-      <defs>
-        <filter id="softGlow">
-          <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="white" floodOpacity="0.24" />
-        </filter>
-      </defs>
-    </svg>
-  );
 }
 
 function Pin({ team, x, y }: { team: Team; x: number; y: number }) {
@@ -576,16 +508,6 @@ function applyGroupRank(selection: { first?: string; second?: string; third?: st
     if (next[key] === teamId) next[key] = undefined;
   });
   next[rank] = selection[rank] === teamId ? undefined : teamId;
-  return next;
-}
-
-function cycleGroupRank(selection: { first?: string; second?: string; third?: string }, teamId: string) {
-  const currentRank = rankForTeam(selection, teamId);
-  if (!currentRank) return applyGroupRank(selection, teamId, "first");
-  if (currentRank === "first") return applyGroupRank(selection, teamId, "second");
-  if (currentRank === "second") return applyGroupRank(selection, teamId, "third");
-  const next = { ...selection };
-  next.third = undefined;
   return next;
 }
 
