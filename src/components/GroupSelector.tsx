@@ -3,23 +3,23 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, ChevronRight, Medal } from "lucide-react";
+import { CheckCircle2, Medal } from "lucide-react";
 import { groups, type Group, type Team } from "@/data/worldCup2026";
 import { cn } from "@/lib/utils";
 
-const groupPositions = [
-  "left-[8%] top-[9%]",
-  "left-[37%] top-[4%]",
-  "right-[8%] top-[9%]",
-  "left-[3%] top-[32%]",
-  "left-[37%] top-[27%]",
-  "right-[3%] top-[32%]",
-  "left-[3%] bottom-[32%]",
-  "left-[37%] bottom-[27%]",
-  "right-[3%] bottom-[32%]",
-  "left-[8%] bottom-[9%]",
-  "left-[37%] bottom-[4%]",
-  "right-[8%] bottom-[9%]",
+const groupPieceLayouts = [
+  { x: 12, y: 11, w: 23, h: 19, tone: "linear-gradient(135deg,#198FE3,#54B7F8)" },
+  { x: 38.5, y: 8, w: 23, h: 19, tone: "linear-gradient(135deg,#F6F1E5,#C8D1DC)" },
+  { x: 65, y: 11, w: 23, h: 19, tone: "linear-gradient(135deg,#F7D774,#D9A915)" },
+  { x: 10, y: 34, w: 23, h: 19, tone: "linear-gradient(135deg,#38A3E8,#196CB2)" },
+  { x: 36, y: 31, w: 24, h: 18, tone: "linear-gradient(135deg,#F8F5EA,#D3D9E1)" },
+  { x: 67, y: 34, w: 23, h: 19, tone: "linear-gradient(135deg,#F8D74B,#DFA70B)" },
+  { x: 10, y: 57, w: 23, h: 19, tone: "linear-gradient(135deg,#68B94B,#26782B)" },
+  { x: 36, y: 58, w: 24, h: 18, tone: "linear-gradient(135deg,#E7EEF2,#B7C5D0)" },
+  { x: 67, y: 57, w: 23, h: 19, tone: "linear-gradient(135deg,#F57B25,#C64017)" },
+  { x: 18, y: 76, w: 22, h: 18, tone: "linear-gradient(135deg,#5FAE45,#246C28)" },
+  { x: 39, y: 76, w: 22, h: 18, tone: "linear-gradient(135deg,#F8F5EA,#D4D9DF)" },
+  { x: 60, y: 76, w: 22, h: 18, tone: "linear-gradient(135deg,#F07D29,#AD3419)" },
 ];
 
 export function GroupSelector({
@@ -53,18 +53,20 @@ export function GroupSelector({
           </p>
         </div>
 
-        <div className="relative mx-auto min-h-[720px] overflow-x-auto scrollbar-none lg:min-h-[840px]">
+        <div className="relative z-10 mx-auto min-h-[720px] overflow-x-auto scrollbar-none lg:min-h-[840px]">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="puzzle-ball relative mx-auto aspect-square min-w-[760px] max-w-[860px] rounded-full border border-white/15 p-7"
+            className="puzzle-ball relative mx-auto aspect-square min-w-[720px] max-w-[840px] overflow-hidden rounded-full border border-white/15"
           >
-            <div className="absolute left-1/2 top-1/2 z-20 grid h-40 w-40 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-[#F7D774]/45 bg-[#05070A]/90 text-center shadow-[0_0_70px_rgb(247_215_116_/_0.28)] backdrop-blur">
+            <div className="absolute inset-[6%] rounded-full border-[3px] border-black/70 shadow-[inset_0_0_0_1px_rgb(255_255_255_/_0.14)]" />
+            <div className="absolute inset-[18%] rounded-full border-[3px] border-black/65" />
+            <div className="absolute left-1/2 top-1/2 z-30 grid h-32 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[3px] border-black bg-[#F7F3E8] text-center text-[#05070A] shadow-[0_0_0_1px_rgb(255_255_255_/_0.3),0_0_70px_rgb(247_215_116_/_0.28)]">
               <div className="px-4">
-                <Medal className="mx-auto mb-2 h-6 w-6 text-[#F7D774]" />
-                <div className="text-3xl font-black text-white">{selectedCount}</div>
-                <div className="mt-1 text-[10px] font-black uppercase tracking-wide text-white/40">direct picks</div>
-                <div className="mt-2 rounded-full bg-[#F7D774]/15 px-3 py-1 text-[10px] font-black text-[#F7D774]">
+                <Medal className="mx-auto mb-1 h-5 w-5 text-[#C79516]" />
+                <div className="text-3xl font-black">{selectedCount}</div>
+                <div className="mt-1 text-[9px] font-black uppercase tracking-wide text-black/50">direct picks</div>
+                <div className="mt-2 rounded-full bg-black px-3 py-1 text-[10px] font-black text-[#F7D774]">
                   {thirdPlaceIds.length}/8 thirds
                 </div>
               </div>
@@ -74,7 +76,7 @@ export function GroupSelector({
               <GroupPod
                 key={group.id}
                 group={group}
-                className={groupPositions[index]}
+                layout={groupPieceLayouts[index]}
                 active={activeGroup.id === group.id}
                 winnerIds={groupWinners[group.id] ?? []}
                 thirdPlaceIds={thirdPlaceIds}
@@ -156,14 +158,14 @@ export function GroupSelector({
 
 function GroupPod({
   group,
-  className,
+  layout,
   active,
   winnerIds,
   thirdPlaceIds,
   onOpen,
 }: {
   group: Group;
-  className: string;
+  layout: { x: number; y: number; w: number; h: number; tone: string };
   active: boolean;
   winnerIds: string[];
   thirdPlaceIds: string[];
@@ -172,24 +174,34 @@ function GroupPod({
   return (
     <motion.button
       type="button"
+      aria-label={`Open Group ${group.id}`}
       onClick={onOpen}
-      whileHover={{ y: -4, scale: 1.02 }}
+      whileHover={{ y: -3, scale: 1.015 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "absolute z-10 w-[190px] rounded-[28px] border p-3 text-left backdrop-blur transition",
-        "bg-white/[0.08] shadow-[inset_0_1px_0_rgb(255_255_255_/_0.16),0_18px_50px_rgb(0_0_0_/_0.28)]",
-        active ? "border-[#F7D774]/70 shadow-[0_0_38px_rgb(247_215_116_/_0.18)]" : "border-white/12 hover:border-white/25",
-        className,
+        "absolute z-10 border-[3px] border-black p-3 text-left text-white transition",
+        "shadow-[inset_0_3px_4px_rgb(255_255_255_/_0.5),inset_0_-10px_20px_rgb(0_0_0_/_0.16),0_8px_18px_rgb(0_0_0_/_0.35)]",
+        active && "z-20 ring-2 ring-[#F7D774] ring-offset-2 ring-offset-[#05070A]",
       )}
       style={{
-        clipPath: "polygon(7% 0, 93% 0, 100% 22%, 92% 100%, 8% 100%, 0 22%)",
+        left: `${layout.x}%`,
+        top: `${layout.y}%`,
+        width: `${layout.w}%`,
+        height: `${layout.h}%`,
+        background: layout.tone,
+        clipPath: "polygon(10% 0, 84% 0, 100% 22%, 91% 100%, 16% 100%, 0 74%, 0 16%)",
       }}
     >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[#F7D774]">Group {group.id}</span>
-        <ChevronRight className="h-4 w-4 text-white/40" />
+      <span className="absolute -right-3 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full border-[3px] border-black bg-inherit shadow-[inset_0_1px_2px_rgb(255_255_255_/_0.4)]" />
+      <span className="absolute -bottom-3 left-1/2 h-8 w-8 -translate-x-1/2 rounded-full border-[3px] border-black bg-inherit shadow-[inset_0_1px_2px_rgb(255_255_255_/_0.4)]" />
+      <span className="absolute -left-3 top-1/2 h-7 w-7 -translate-y-1/2 rounded-full border-[3px] border-black bg-[#10151D]" />
+      <div className="relative mb-2 flex items-center justify-between">
+        <span className="rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white">
+          Group {group.id}
+        </span>
+        <span className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-black text-black">{winnerIds.length}/2</span>
       </div>
-      <div className="space-y-1.5">
+      <div className="relative grid gap-1">
         {group.teams.map((team) => {
           const rank = winnerIds.indexOf(team.id);
           const third = thirdPlaceIds.includes(team.id);
@@ -197,17 +209,19 @@ function GroupPod({
             <div
               key={team.id}
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-2 py-1.5",
+                "flex items-center gap-1.5 rounded-md border px-1.5 py-1 text-[11px] uppercase tracking-wide",
                 rank >= 0
-                  ? "border-[#F7D774]/45 bg-[#F7D774]/14 text-white"
+                  ? "border-white/80 bg-black/58 text-white"
                   : third
-                    ? "border-sky-300/30 bg-sky-400/10 text-white/75"
-                    : "border-white/8 bg-black/10 text-white/52",
+                    ? "border-white/60 bg-black/35 text-white"
+                    : "border-black/30 bg-black/28 text-white",
               )}
             >
-              <span className="text-lg">{team.flag}</span>
-              <span className="min-w-0 flex-1 truncate text-xs font-black">{team.name}</span>
-              {rank >= 0 ? <span className="text-[10px] font-black text-[#F7D774]">{rank + 1}</span> : null}
+              <span className="shrink-0 text-sm">{team.flag}</span>
+              <span className="min-w-0 flex-1 truncate font-black drop-shadow-[0_1px_1px_rgb(0_0_0_/_0.65)]">
+                {team.name.length > 14 ? team.countryCode : team.name}
+              </span>
+              {rank >= 0 ? <span className="font-black text-[#F7D774] drop-shadow-[0_1px_1px_rgb(0_0_0_/_0.7)]">{rank + 1}</span> : null}
             </div>
           );
         })}
