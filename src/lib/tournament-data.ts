@@ -76,11 +76,11 @@ export type Bracket = {
 export const tournament = {
   id: "global-football-2026",
   name: "2026 Global Football Tournament",
-  label: "Projected bracket demo",
+  label: "Draw demo",
   dates: "June 11 to July 19, 2026",
   hosts: ["Canada", "Mexico", "United States"],
-  format: "48 teams, 12 demo groups, 32-team knockout bracket",
-  note: "Demo groups only. Final groups and schedule placeholders should be updated when the official final tournament draw is available.",
+  format: "48 teams, 12 groups, 32-team knockout bracket",
+  note: "Demo bracket pairings only. Team list and groups should be updated when the official final tournament draw is available.",
   sources: [
     {
       label: "Official schedule release",
@@ -90,50 +90,85 @@ export const tournament = {
       label: "Official qualified teams tracker",
       url: "https://www.fifa.com/en/articles/world-cup-2026-who-has-qualified",
     },
+    {
+      label: "Reported group draw reference",
+      url: "https://www.skysports.com/football/news/11095/13427475/world-cup-2026-who-has-qualified-full-list-of-teams-for-usa-canada-and-mexico-tournament",
+    },
   ],
 };
 
+const flagFromCode = (countryCode: string) => {
+  if (countryCode === "ENG" || countryCode === "SCO") return "🏴";
+
+  return countryCode
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "")
+    .slice(0, 2)
+    .split("")
+    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join("");
+};
+
 const qualifiedTeams = [
-  ["can", "Canada", "CA", "🇨🇦", "CONCACAF", "#E21B2D", "#FFFFFF"],
-  ["mex", "Mexico", "MX", "🇲🇽", "CONCACAF", "#006847", "#CE1126"],
-  ["usa", "United States", "US", "🇺🇸", "CONCACAF", "#1D4ED8", "#DC2626"],
-  ["arg", "Argentina", "AR", "🇦🇷", "CONMEBOL", "#75AADB", "#F6C453"],
-  ["bra", "Brazil", "BR", "🇧🇷", "CONMEBOL", "#16A34A", "#FACC15"],
-  ["uru", "Uruguay", "UY", "🇺🇾", "CONMEBOL", "#60A5FA", "#FFFFFF"],
-  ["col", "Colombia", "CO", "🇨🇴", "CONMEBOL", "#FACC15", "#2563EB"],
-  ["ecu", "Ecuador", "EC", "🇪🇨", "CONMEBOL", "#FACC15", "#EF4444"],
-  ["par", "Paraguay", "PY", "🇵🇾", "CONMEBOL", "#DC2626", "#2563EB"],
-  ["jpn", "Japan", "JP", "🇯🇵", "AFC", "#1D4ED8", "#EF4444"],
-  ["kor", "South Korea", "KR", "🇰🇷", "AFC", "#DC2626", "#1D4ED8"],
-  ["irn", "Iran", "IR", "🇮🇷", "AFC", "#16A34A", "#EF4444"],
-  ["aus", "Australia", "AU", "🇦🇺", "AFC", "#FACC15", "#16A34A"],
-  ["uzb", "Uzbekistan", "UZ", "🇺🇿", "AFC", "#22C55E", "#38BDF8"],
-  ["jor", "Jordan", "JO", "🇯🇴", "AFC", "#EF4444", "#16A34A"],
-  ["ksa", "Saudi Arabia", "SA", "🇸🇦", "AFC", "#15803D", "#FFFFFF"],
-  ["qat", "Qatar", "QA", "🇶🇦", "AFC", "#8A1538", "#FFFFFF"],
-  ["mar", "Morocco", "MA", "🇲🇦", "CAF", "#C1272D", "#16A34A"],
-  ["tun", "Tunisia", "TN", "🇹🇳", "CAF", "#E70013", "#FFFFFF"],
-  ["egy", "Egypt", "EG", "🇪🇬", "CAF", "#CE1126", "#111827"],
-  ["alg", "Algeria", "DZ", "🇩🇿", "CAF", "#16A34A", "#FFFFFF"],
-  ["gha", "Ghana", "GH", "🇬🇭", "CAF", "#FACC15", "#16A34A"],
-  ["cpv", "Cape Verde", "CV", "🇨🇻", "CAF", "#2563EB", "#FACC15"],
-  ["nzl", "New Zealand", "NZ", "🇳🇿", "OFC", "#111827", "#FFFFFF"],
+  ["mex", "Mexico", "MX", "CONCACAF", "A", "#006847", "#CE1126"],
+  ["cze", "Czech Republic", "CZ", "UEFA", "A", "#D7141A", "#11457E"],
+  ["rsa", "South Africa", "ZA", "CAF", "A", "#007A4D", "#FFB612"],
+  ["kor", "South Korea", "KR", "AFC", "A", "#DC2626", "#1D4ED8"],
+  ["can", "Canada", "CA", "CONCACAF", "B", "#E21B2D", "#FFFFFF"],
+  ["bih", "Bosnia and Herzegovina", "BA", "UEFA", "B", "#1D4ED8", "#FACC15"],
+  ["qat", "Qatar", "QA", "AFC", "B", "#8A1538", "#FFFFFF"],
+  ["sui", "Switzerland", "CH", "UEFA", "B", "#DC2626", "#FFFFFF"],
+  ["bra", "Brazil", "BR", "CONMEBOL", "C", "#16A34A", "#FACC15"],
+  ["hai", "Haiti", "HT", "CONCACAF", "C", "#1D4ED8", "#DC2626"],
+  ["mar", "Morocco", "MA", "CAF", "C", "#C1272D", "#16A34A"],
+  ["sco", "Scotland", "SCO", "UEFA", "C", "#1D4ED8", "#FFFFFF"],
+  ["usa", "United States", "US", "CONCACAF", "D", "#1D4ED8", "#DC2626"],
+  ["aus", "Australia", "AU", "AFC", "D", "#FACC15", "#16A34A"],
+  ["par", "Paraguay", "PY", "CONMEBOL", "D", "#DC2626", "#2563EB"],
+  ["tur", "Turkey", "TR", "UEFA", "D", "#E30A17", "#FFFFFF"],
+  ["cuw", "Curacao", "CW", "CONCACAF", "E", "#1D4ED8", "#FACC15"],
+  ["ecu", "Ecuador", "EC", "CONMEBOL", "E", "#FACC15", "#EF4444"],
+  ["ger", "Germany", "DE", "UEFA", "E", "#111827", "#FACC15"],
+  ["civ", "Ivory Coast", "CI", "CAF", "E", "#F97316", "#16A34A"],
+  ["ned", "Netherlands", "NL", "UEFA", "F", "#F97316", "#1D4ED8"],
+  ["jpn", "Japan", "JP", "AFC", "F", "#1D4ED8", "#EF4444"],
+  ["swe", "Sweden", "SE", "UEFA", "F", "#2563EB", "#FACC15"],
+  ["tun", "Tunisia", "TN", "CAF", "F", "#E70013", "#FFFFFF"],
+  ["bel", "Belgium", "BE", "UEFA", "G", "#111827", "#FACC15"],
+  ["egy", "Egypt", "EG", "CAF", "G", "#CE1126", "#111827"],
+  ["irn", "Iran", "IR", "AFC", "G", "#16A34A", "#EF4444"],
+  ["nzl", "New Zealand", "NZ", "OFC", "G", "#111827", "#FFFFFF"],
+  ["cpv", "Cape Verde", "CV", "CAF", "H", "#2563EB", "#FACC15"],
+  ["ksa", "Saudi Arabia", "SA", "AFC", "H", "#15803D", "#FFFFFF"],
+  ["esp", "Spain", "ES", "UEFA", "H", "#EF4444", "#FACC15"],
+  ["uru", "Uruguay", "UY", "CONMEBOL", "H", "#60A5FA", "#FFFFFF"],
+  ["fra", "France", "FR", "UEFA", "I", "#1D4ED8", "#EF4444"],
+  ["nor", "Norway", "NO", "UEFA", "I", "#BA0C2F", "#00205B"],
+  ["sen", "Senegal", "SN", "CAF", "I", "#16A34A", "#FACC15"],
+  ["irq", "Iraq", "IQ", "AFC", "I", "#CE1126", "#16A34A"],
+  ["alg", "Algeria", "DZ", "CAF", "J", "#16A34A", "#FFFFFF"],
+  ["arg", "Argentina", "AR", "CONMEBOL", "J", "#75AADB", "#F6C453"],
+  ["aut", "Austria", "AT", "UEFA", "J", "#DC2626", "#FFFFFF"],
+  ["jor", "Jordan", "JO", "AFC", "J", "#EF4444", "#16A34A"],
+  ["col", "Colombia", "CO", "CONMEBOL", "K", "#FACC15", "#2563EB"],
+  ["jam", "Jamaica", "JM", "CONCACAF", "K", "#16A34A", "#FACC15"],
+  ["por", "Portugal", "PT", "UEFA", "K", "#EF4444", "#16A34A"],
+  ["uzb", "Uzbekistan", "UZ", "AFC", "K", "#22C55E", "#38BDF8"],
+  ["cro", "Croatia", "HR", "UEFA", "L", "#DC2626", "#2563EB"],
+  ["eng", "England", "ENG", "UEFA", "L", "#FFFFFF", "#DC2626"],
+  ["gha", "Ghana", "GH", "CAF", "L", "#FACC15", "#16A34A"],
+  ["pan", "Panama", "PA", "CONCACAF", "L", "#DC2626", "#2563EB"],
 ] as const;
 
-const placeholders = Array.from({ length: 24 }, (_, index) => {
-  const number = index + 1;
-  return [`q${number}`, `Qualifier ${number}`, `Q${number}`, "◆", "TBD", "#64748B", "#E2E8F0"] as const;
-});
-
 // Team list and groups should be updated when the official final tournament draw is available.
-export const teams: Team[] = [...qualifiedTeams, ...placeholders].map(
-  ([id, name, countryCode, flagEmoji, confederation, primary, secondary], index) => ({
+export const teams: Team[] = qualifiedTeams.map(
+  ([id, name, countryCode, confederation, group, primary, secondary], index) => ({
     id,
     name,
     countryCode,
-    flagEmoji,
+    flagEmoji: flagFromCode(countryCode),
     confederation,
-    group: String.fromCharCode(65 + Math.floor(index / 4)),
+    group,
     seed: index + 1,
     colors: {
       primary,
@@ -146,7 +181,7 @@ export const groups: Group[] = Array.from({ length: 12 }, (_, index) => {
   const id = String.fromCharCode(65 + index);
   return {
     id,
-    name: `Demo Group ${id}`,
+    name: `Group ${id}`,
     teams: teams.filter((team) => team.group === id),
   };
 });
@@ -169,22 +204,22 @@ export const rounds: Array<{ key: Exclude<RoundKey, "champion">; label: string; 
 ];
 
 const r32PairIds = [
-  ["can", "q1"],
-  ["arg", "q2"],
-  ["mex", "q3"],
-  ["bra", "q4"],
-  ["usa", "q5"],
-  ["uru", "q6"],
-  ["col", "q7"],
-  ["jpn", "q8"],
-  ["kor", "q9"],
-  ["mar", "q10"],
-  ["ecu", "q11"],
-  ["irn", "q12"],
-  ["aus", "q13"],
-  ["egy", "q14"],
-  ["par", "q15"],
-  ["gha", "q16"],
+  ["mex", "sco"],
+  ["can", "sui"],
+  ["bra", "mar"],
+  ["usa", "tur"],
+  ["ned", "tun"],
+  ["bel", "nzl"],
+  ["fra", "irq"],
+  ["arg", "jor"],
+  ["col", "uzb"],
+  ["cro", "pan"],
+  ["kor", "cze"],
+  ["qat", "bih"],
+  ["ecu", "ger"],
+  ["aus", "par"],
+  ["esp", "uru"],
+  ["eng", "gha"],
 ];
 
 export const sampleKnockoutMatches: Match[] = [
