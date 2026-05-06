@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Globe2, RotateCcw, Share2, Trophy } from "lucide-react";
 import {
-  groupStageMatchups,
   groups,
   stageLabels,
   toGlobeMatchups,
@@ -18,6 +17,7 @@ import { StageTabs } from "./StageTabs";
 import { cn } from "@/lib/utils";
 
 type PickMap = Record<string, string>;
+type GroupSelection = Record<string, { first?: string; second?: string; third?: string }>;
 
 type StandingRow = {
   team: Team;
@@ -26,6 +26,8 @@ type StandingRow = {
   wins: number;
   originalIndex: number;
 };
+
+type RankKey = "first" | "second" | "third";
 
 export function GlobeMatchupExperience() {
   const [activeStage, setActiveStage] = useState<StageKey>("groups");
@@ -37,11 +39,11 @@ export function GlobeMatchupExperience() {
     sf: 0,
     final: 0,
   });
-  const [groupPicks, setGroupPicks] = useState<PickMap>({});
+  const [groupSelections, setGroupSelections] = useState<GroupSelection>({});
   const [knockoutPicks, setKnockoutPicks] = useState<PickMap>({});
   const [copied, setCopied] = useState(false);
 
-  const standings = useMemo(() => calculateStandings(groupPicks), [groupPicks]);
+  const standings = useMemo(() => calculateStandings(groupSelections), [groupSelections]);
   const r32 = useMemo(() => buildRoundOf32FromStandings(standings), [standings]);
   const r32Winners = winnersFor(r32, knockoutPicks);
   const r16 = useMemo(() => buildNextRound("r16", r32Winners), [r32Winners]);
@@ -53,8 +55,7 @@ export function GlobeMatchupExperience() {
   const final = useMemo(() => buildNextRound("final", sfWinners), [sfWinners]);
   const champion = winnersFor(final, knockoutPicks)[0];
 
-  const matchupsByStage: Record<StageKey, GlobeMatchup[]> = {
-    groups: groupStageMatchups,
+  const matchupsByStage: Record<Exclude<StageKey, "groups">, GlobeMatchup[]> = {
     r32: toGlobeMatchups("r32", r32),
     r16: toGlobeMatchups("r16", r16),
     qf: toGlobeMatchups("qf", qf),
@@ -62,34 +63,34 @@ export function GlobeMatchupExperience() {
     final: toGlobeMatchups("final", final),
   };
 
-  const currentMatchups = matchupsByStage[activeStage];
-  const activeIndex = Math.min(matchIndexByStage[activeStage], Math.max(currentMatchups.length - 1, 0));
-  const currentMatchup = currentMatchups[activeIndex];
-  const activePickMap = activeStage === "groups" ? groupPicks : knockoutPicks;
-  const selectedWinnerId = currentMatchup ? activePickMap[currentMatchup.id] : undefined;
-  const completedCount = currentMatchups.filter((matchup) => Boolean(activePickMap[matchup.id])).length;
+  const currentMatchups = activeStage === "groups" ? [] : matchupsByStage[activeStage];
+  const activeIndex = Math.min(matchIndexByStage[activeStage], Math.max((activeStage === "groups" ? groups.length : currentMatchups.length) - 1, 0));
+  const currentMatchup = activeStage === "groups" ? undefined : currentMatchups[activeIndex];
+  const selectedWinnerId = currentMatchup ? knockoutPicks[currentMatchup.id] : undefined;
+  const completedGroups = groups.filter((group) => {
+    const selection = groupSelections[group.id];
+    return Boolean(selection?.first && selection.second);
+  }).length;
+  const completedCount = activeStage === "groups" ? completedGroups : currentMatchups.filter((matchup) => Boolean(knockoutPicks[matchup.id])).length;
+  const totalCount = activeStage === "groups" ? groups.length : currentMatchups.length;
   const setStageIndex = (stage: StageKey, nextIndex: number) => {
+    const length = stage === "groups" ? groups.length : matchupsByStage[stage].length;
     setMatchIndexByStage((current) => ({
       ...current,
-      [stage]: Math.max(0, Math.min(nextIndex, Math.max(matchupsByStage[stage].length - 1, 0))),
+      [stage]: Math.max(0, Math.min(nextIndex, Math.max(length - 1, 0))),
     }));
   };
 
   const pickWinner = (matchup: GlobeMatchup, team: Team) => {
-    if (matchup.stage === "groups") {
-      setGroupPicks((current) => ({ ...current, [matchup.id]: team.id }));
-      setKnockoutPicks({});
-    } else {
-      setKnockoutPicks((current) => {
-        const next = { ...current, [matchup.id]: team.id };
-        downstreamStages(matchup.stage).forEach((stage) => {
-          Object.keys(next).forEach((key) => {
-            if (key.startsWith(`${stage}-`)) delete next[key];
-          });
+    setKnockoutPicks((current) => {
+      const next = { ...current, [matchup.id]: team.id };
+      downstreamStages(matchup.stage).forEach((stage) => {
+        Object.keys(next).forEach((key) => {
+          if (key.startsWith(`${stage}-`)) delete next[key];
         });
-        return next;
       });
-    }
+      return next;
+    });
 
     window.setTimeout(() => {
       setStageIndex(matchup.stage, activeIndex + 1);
@@ -97,7 +98,7 @@ export function GlobeMatchupExperience() {
   };
 
   const reset = () => {
-    setGroupPicks({});
+    setGroupSelections({});
     setKnockoutPicks({});
     setMatchIndexByStage({ groups: 0, r32: 0, r16: 0, qf: 0, sf: 0, final: 0 });
     setActiveStage("groups");
@@ -143,7 +144,7 @@ export function GlobeMatchupExperience() {
               2026 Global Soccer Bracket
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/58 md:text-lg">
-              Pick winners one match at a time. Group standings update automatically, then your knockout path builds toward a champion.
+              Set each group on a cinematic world globe. Top two plus the best third-place teams feed the knockout path.
             </p>
           </div>
           <StageTabs activeStage={activeStage} onStageChange={setActiveStage} />
@@ -151,7 +152,30 @@ export function GlobeMatchupExperience() {
 
         <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
           <section className="rounded-[36px] border border-white/10 bg-[#080A0E] p-4 shadow-[0_30px_120px_rgb(0_0_0_/_0.48)] md:p-6">
-            {currentMatchup ? (
+            {activeStage === "groups" ? (
+              <GroupGlobeCard
+                group={groups[activeIndex]}
+                selection={groupSelections[groups[activeIndex].id] ?? {}}
+                index={activeIndex}
+                total={groups.length}
+                onRankPick={(team, rank) => {
+                  setGroupSelections((current) => ({
+                    ...current,
+                    [groups[activeIndex].id]: applyGroupRank(current[groups[activeIndex].id] ?? {}, team.id, rank),
+                  }));
+                  setKnockoutPicks({});
+                }}
+                onMarkerPick={(team) => {
+                  setGroupSelections((current) => ({
+                    ...current,
+                    [groups[activeIndex].id]: cycleGroupRank(current[groups[activeIndex].id] ?? {}, team.id),
+                  }));
+                  setKnockoutPicks({});
+                }}
+                onPrevious={() => setStageIndex("groups", activeIndex - 1)}
+                onNext={() => setStageIndex("groups", activeIndex + 1)}
+              />
+            ) : currentMatchup ? (
               <GlobeMatchupCard
                 matchup={currentMatchup}
                 winnerId={selectedWinnerId}
@@ -176,10 +200,10 @@ export function GlobeMatchupExperience() {
           <aside className="h-fit rounded-[32px] border border-white/10 bg-white/[0.05] p-5 backdrop-blur lg:sticky lg:top-6">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">{stageLabels[activeStage]}</p>
             <h2 className="mt-2 text-3xl font-black tracking-tight">
-              {completedCount}/{currentMatchups.length} picked
+              {completedCount}/{totalCount} picked
             </h2>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-yellow-300" style={{ width: `${currentMatchups.length ? (completedCount / currentMatchups.length) * 100 : 0}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-yellow-300" style={{ width: `${totalCount ? (completedCount / totalCount) * 100 : 0}%` }} />
             </div>
 
             {champion ? (
@@ -282,6 +306,156 @@ function FlagPick({ team, selected, dimmed, onClick }: { team: Team; selected: b
   );
 }
 
+function GroupGlobeCard({
+  group,
+  selection,
+  index,
+  total,
+  onRankPick,
+  onMarkerPick,
+  onPrevious,
+  onNext,
+}: {
+  group: { id: string; teams: Team[] };
+  selection: { first?: string; second?: string; third?: string };
+  index: number;
+  total: number;
+  onRankPick: (team: Team, rank: RankKey) => void;
+  onMarkerPick: (team: Team) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <motion.div key={group.id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative min-h-[720px] overflow-hidden rounded-[30px] bg-[#020407]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgb(255_255_255_/_0.12),transparent_30rem),linear-gradient(180deg,transparent,rgb(0_0_0_/_0.66))]" />
+      <GroupGlobeVisual group={group} selection={selection} onMarkerPick={onMarkerPick} />
+
+      <div className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Group Stage</p>
+          <h2 className="mt-1 text-2xl font-black text-white">Group {group.id}</h2>
+        </div>
+        <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1 text-xs font-black text-white/60">
+          {index + 1}/{total}
+        </span>
+      </div>
+
+      <div className="absolute bottom-20 left-4 right-4 z-20 grid gap-3 md:grid-cols-4">
+        {group.teams.map((team) => (
+          <GroupRankCard
+            key={team.id}
+            team={team}
+            rank={rankForTeam(selection, team.id)}
+            onRankPick={onRankPick}
+          />
+        ))}
+      </div>
+
+      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between">
+        <button type="button" onClick={onPrevious} className="grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-black/55 text-white disabled:opacity-35" disabled={index === 0} aria-label="Previous group">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="rounded-full border border-white/10 bg-black/55 px-4 py-2 text-xs font-black uppercase tracking-wide text-white/55">
+          Select 1st, 2nd, and optional 3rd
+        </div>
+        <button type="button" onClick={onNext} className="grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-black/55 text-white disabled:opacity-35" disabled={index >= total - 1} aria-label="Next group">
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function GroupGlobeVisual({
+  group,
+  selection,
+  onMarkerPick,
+}: {
+  group: { id: string; teams: Team[] };
+  selection: { first?: string; second?: string; third?: string };
+  onMarkerPick: (team: Team) => void;
+}) {
+  return (
+    <div className="absolute left-1/2 top-[42%] h-[660px] w-[660px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-[#050505] shadow-[inset_-70px_-65px_110px_rgb(0_0_0_/_0.88),inset_38px_28px_80px_rgb(255_255_255_/_0.2),0_0_100px_rgb(255_255_255_/_0.14)]">
+      <div className="absolute inset-0 overflow-hidden rounded-full">
+        <div className="globe-grid absolute inset-0 opacity-55" />
+        <WorldMapLayer />
+        {group.teams.map((team) => {
+          const point = project(team);
+          return (
+            <FloatingFlag
+              key={team.id}
+              team={team}
+              x={point.x}
+              y={point.y}
+              rank={rankForTeam(selection, team.id)}
+              onClick={() => onMarkerPick(team)}
+            />
+          );
+        })}
+      </div>
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_34%_18%,rgb(255_255_255_/_0.34),transparent_16%),linear-gradient(90deg,rgb(255_255_255_/_0.08),transparent_32%,transparent_70%,rgb(255_255_255_/_0.12))]" />
+    </div>
+  );
+}
+
+function FloatingFlag({ team, x, y, rank, onClick }: { team: Team; x: number; y: number; rank?: RankKey; onClick: () => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileHover={{ y: -4, scale: 1.05 }}
+      whileTap={{ scale: 0.96 }}
+      className={cn(
+        "absolute z-30 -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-black/70 p-1.5 backdrop-blur transition",
+        rank === "first" && "border-yellow-300 shadow-[0_0_30px_rgb(250_204_21_/_0.62)]",
+        rank === "second" && "border-slate-100 shadow-[0_0_28px_rgb(226_232_240_/_0.5)]",
+        rank === "third" && "border-amber-700 shadow-[0_0_28px_rgb(180_83_9_/_0.52)]",
+        !rank && "border-white/18 shadow-[0_0_22px_rgb(0_0_0_/_0.42)]",
+      )}
+      style={{ left: `${x}%`, top: `${y}%` }}
+      aria-label={`Select ${team.name}`}
+    >
+      <FlagImage team={team} className="h-9 w-12 rounded-md object-cover" />
+      <span className="mt-1 block text-center text-[10px] font-black text-white">{team.countryCode}</span>
+    </motion.button>
+  );
+}
+
+function GroupRankCard({ team, rank, onRankPick }: { team: Team; rank?: RankKey; onRankPick: (team: Team, rank: RankKey) => void }) {
+  return (
+    <div className={cn("rounded-2xl border bg-black/62 p-3 backdrop-blur", rankClass(rank))}>
+      <div className="flex items-center gap-2">
+        <FlagImage team={team} className="h-8 w-11 rounded-md object-cover" />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-black text-white">{team.name}</div>
+          <div className="text-[10px] font-black uppercase tracking-wide text-white/40">{team.countryCode}</div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        <RankButton active={rank === "first"} label="1st" onClick={() => onRankPick(team, "first")} />
+        <RankButton active={rank === "second"} label="2nd" onClick={() => onRankPick(team, "second")} />
+        <RankButton active={rank === "third"} label="3rd" onClick={() => onRankPick(team, "third")} />
+      </div>
+    </div>
+  );
+}
+
+function RankButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-xl border px-2 py-2 text-xs font-black uppercase tracking-wide transition",
+        active ? "border-white/40 bg-white text-[#06101C]" : "border-white/10 bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 function FlagImage({ team, className }: { team: Team; className?: string }) {
   return <Image src={team.flagUrl} alt={`${team.name} flag`} width={320} height={240} className={className} unoptimized priority />;
 }
@@ -310,6 +484,27 @@ function GlobeVisual({ teamA, teamB }: { teamA: Team; teamB: Team }) {
 
 function LandMass({ className }: { className: string }) {
   return <div className={cn("absolute rounded-[45%_55%_42%_58%] bg-white shadow-[0_0_18px_rgb(255_255_255_/_0.2)]", className)} />;
+}
+
+function WorldMapLayer() {
+  return (
+    <svg className="absolute inset-[4%] h-[92%] w-[92%] opacity-95" viewBox="0 0 1000 500" aria-hidden="true">
+      <g fill="rgba(245,248,252,0.94)" filter="url(#softGlow)">
+        <path d="M100 92 154 54l88 12 58 42-8 62 42 37-38 42-76-6-48 38-64-20-46-70 28-42-22-28z" />
+        <path d="M247 263 311 291l38 74-25 80-44 40-38-66 8-52-38-46z" />
+        <path d="M463 108 516 92l46 22 57-2 40 31-58 34-62-8-52 19-44-28z" />
+        <path d="M515 202 590 187l52 48 13 88-28 88-62-15-35-72-47-31 8-55z" />
+        <path d="M662 129 762 88l112 48 58 76-38 48-99-17-44 50-90-35-53-78z" />
+        <path d="M783 351 854 326l58 34 8 58-66 25-60-26z" />
+        <path d="M424 74 448 61l20 16-16 25-32-5z" />
+      </g>
+      <defs>
+        <filter id="softGlow">
+          <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="white" floodOpacity="0.24" />
+        </filter>
+      </defs>
+    </svg>
+  );
 }
 
 function Pin({ team, x, y }: { team: Team; x: number; y: number }) {
@@ -346,24 +541,26 @@ function StandingsPanel({ standings }: { standings: Record<string, StandingRow[]
   );
 }
 
-function calculateStandings(groupPicks: PickMap): Record<string, StandingRow[]> {
+function calculateStandings(groupPicks: GroupSelection): Record<string, StandingRow[]> {
   return Object.fromEntries(
     groups.map((group) => {
       const rows = group.teams.map((team, originalIndex) => ({ team, points: 0, played: 0, wins: 0, originalIndex }));
+      const selection = groupPicks[group.id] ?? {};
 
-      groupStageMatchups
-        .filter((matchup) => matchup.group === group.id)
-        .forEach((matchup) => {
-          const winnerId = groupPicks[matchup.id];
-          if (!winnerId) return;
-          rows.forEach((row) => {
-            if (row.team.id === matchup.teamA.id || row.team.id === matchup.teamB.id) row.played += 1;
-            if (row.team.id === winnerId) {
-              row.points += 3;
-              row.wins += 1;
-            }
-          });
-        });
+      rows.forEach((row) => {
+        if (row.team.id === selection.first) {
+          row.points = 7;
+          row.wins = 2;
+          row.played = 3;
+        } else if (row.team.id === selection.second) {
+          row.points = 5;
+          row.wins = 1;
+          row.played = 3;
+        } else if (row.team.id === selection.third) {
+          row.points = 3;
+          row.played = 3;
+        }
+      });
 
       return [
         group.id,
@@ -371,6 +568,39 @@ function calculateStandings(groupPicks: PickMap): Record<string, StandingRow[]> 
       ];
     }),
   );
+}
+
+function applyGroupRank(selection: { first?: string; second?: string; third?: string }, teamId: string, rank: RankKey) {
+  const next = { ...selection };
+  (["first", "second", "third"] as RankKey[]).forEach((key) => {
+    if (next[key] === teamId) next[key] = undefined;
+  });
+  next[rank] = selection[rank] === teamId ? undefined : teamId;
+  return next;
+}
+
+function cycleGroupRank(selection: { first?: string; second?: string; third?: string }, teamId: string) {
+  const currentRank = rankForTeam(selection, teamId);
+  if (!currentRank) return applyGroupRank(selection, teamId, "first");
+  if (currentRank === "first") return applyGroupRank(selection, teamId, "second");
+  if (currentRank === "second") return applyGroupRank(selection, teamId, "third");
+  const next = { ...selection };
+  next.third = undefined;
+  return next;
+}
+
+function rankForTeam(selection: { first?: string; second?: string; third?: string }, teamId: string): RankKey | undefined {
+  if (selection.first === teamId) return "first";
+  if (selection.second === teamId) return "second";
+  if (selection.third === teamId) return "third";
+  return undefined;
+}
+
+function rankClass(rank?: RankKey) {
+  if (rank === "first") return "border-yellow-300/70 shadow-[0_0_28px_rgb(250_204_21_/_0.24)]";
+  if (rank === "second") return "border-slate-100/70 shadow-[0_0_24px_rgb(226_232_240_/_0.18)]";
+  if (rank === "third") return "border-amber-700/80 shadow-[0_0_24px_rgb(180_83_9_/_0.2)]";
+  return "border-white/10";
 }
 
 function buildRoundOf32FromStandings(standings: Record<string, StandingRow[]>): Matchup[] {
