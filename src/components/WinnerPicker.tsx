@@ -63,11 +63,13 @@ export function WinnerPicker() {
     window.setTimeout(() => setShareCopied(false), 1800);
   };
 
-  const pickGroupTeam = (groupId: string, teamId: string) => {
+  const pickGroupRank = (groupId: string, teamId: string, rank: 0 | 1) => {
     setGroupWinners((current) => {
       const ids = current[groupId] ?? [];
-      const next = ids.includes(teamId) ? ids.filter((id) => id !== teamId) : ids.length < 2 ? [...ids, teamId] : [ids[1], teamId];
-      return { ...current, [groupId]: next };
+      const next = [...ids.filter((id) => id !== teamId)];
+      next[rank] = ids[rank] === teamId ? "" : teamId;
+      const compacted = next.filter(Boolean).slice(0, 2);
+      return { ...current, [groupId]: compacted };
     });
     setPicks({});
   };
@@ -147,7 +149,7 @@ export function WinnerPicker() {
           <GroupSelector
             groupWinners={groupWinners}
             thirdPlaceIds={thirdPlaceIds}
-            onGroupPick={pickGroupTeam}
+            onGroupRankPick={pickGroupRank}
             onThirdPick={pickThirdPlace}
             onGenerate={() => setActiveStage("r32")}
           />
