@@ -7,6 +7,8 @@ export type Team = {
   flag: string;
   group: string;
   confederation: string;
+  lat: number;
+  lng: number;
   colors: {
     primary: string;
     secondary: string;
@@ -24,6 +26,15 @@ export type Matchup = {
   position: number;
   teamA?: Team;
   teamB?: Team;
+};
+
+export type GlobeMatchup = {
+  id: string;
+  stage: StageKey;
+  group?: string;
+  position: number;
+  teamA: Team;
+  teamB: Team;
 };
 
 export const stageLabels: Record<StageKey, string> = {
@@ -97,6 +108,57 @@ const teamRows = [
   ["pan", "Panama", "PA", "L", "CONCACAF", "#DC2626", "#2563EB"],
 ] as const;
 
+const teamLocations: Record<string, [number, number]> = {
+  mex: [23.6, -102.5],
+  rsa: [-30.6, 22.9],
+  kor: [36.5, 127.8],
+  cze: [49.8, 15.5],
+  can: [56.1, -106.3],
+  bih: [44.2, 17.8],
+  qat: [25.3, 51.2],
+  sui: [46.8, 8.2],
+  bra: [-14.2, -51.9],
+  mar: [31.8, -7.1],
+  hai: [18.9, -72.3],
+  sco: [56.5, -4.2],
+  usa: [39.8, -98.6],
+  par: [-23.4, -58.4],
+  aus: [-25.3, 133.8],
+  tur: [39.0, 35.2],
+  ger: [51.2, 10.4],
+  cuw: [12.2, -69.0],
+  civ: [7.5, -5.5],
+  ecu: [-1.8, -78.2],
+  ned: [52.1, 5.3],
+  jpn: [36.2, 138.3],
+  swe: [60.1, 18.6],
+  tun: [33.9, 9.5],
+  bel: [50.5, 4.5],
+  egy: [26.8, 30.8],
+  irn: [32.4, 53.7],
+  nzl: [-40.9, 174.9],
+  esp: [40.5, -3.7],
+  cpv: [16.0, -24.0],
+  ksa: [23.9, 45.1],
+  uru: [-32.5, -55.8],
+  fra: [46.2, 2.2],
+  sen: [14.5, -14.5],
+  irq: [33.2, 43.7],
+  nor: [60.5, 8.5],
+  arg: [-38.4, -63.6],
+  alg: [28.0, 1.7],
+  aut: [47.5, 14.6],
+  jor: [30.6, 36.2],
+  por: [39.4, -8.2],
+  cod: [-2.9, 23.7],
+  uzb: [41.4, 64.6],
+  col: [4.6, -74.3],
+  eng: [52.3, -1.5],
+  cro: [45.1, 15.2],
+  gha: [7.9, -1.0],
+  pan: [8.5, -80.8],
+};
+
 export const teams: Team[] = teamRows.map(([id, name, countryCode, group, confederation, primary, secondary]) => ({
   id,
   name,
@@ -104,6 +166,8 @@ export const teams: Team[] = teamRows.map(([id, name, countryCode, group, confed
   flag: flagFromCode(countryCode),
   group,
   confederation,
+  lat: teamLocations[id][0],
+  lng: teamLocations[id][1],
   colors: { primary, secondary },
 }));
 
@@ -146,4 +210,36 @@ export function buildNextRound(stage: Exclude<StageKey, "groups" | "r32">, winne
     teamA: winners[index * 2],
     teamB: winners[index * 2 + 1],
   }));
+}
+
+const groupFixturePairs = [
+  [0, 1],
+  [2, 3],
+  [0, 2],
+  [1, 3],
+  [0, 3],
+  [1, 2],
+] as const;
+
+export const groupStageMatchups: GlobeMatchup[] = groups.flatMap((group, groupIndex) =>
+  groupFixturePairs.map(([teamAIndex, teamBIndex], index) => ({
+    id: `group-${group.id}-${index + 1}`,
+    stage: "groups" as const,
+    group: group.id,
+    position: groupIndex * 6 + index,
+    teamA: group.teams[teamAIndex],
+    teamB: group.teams[teamBIndex],
+  })),
+);
+
+export function toGlobeMatchups(stage: Exclude<StageKey, "groups">, matchups: Matchup[]): GlobeMatchup[] {
+  return matchups
+    .filter((matchup): matchup is Matchup & { teamA: Team; teamB: Team } => Boolean(matchup.teamA && matchup.teamB))
+    .map((matchup) => ({
+      id: matchup.id,
+      stage,
+      position: matchup.position,
+      teamA: matchup.teamA,
+      teamB: matchup.teamB,
+    }));
 }

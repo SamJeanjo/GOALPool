@@ -122,4 +122,11 @@
     background: radial-gradient(circle at 36% 24%, rgb(255 255 255 / 0.16), transparent 14%);
     pointer-events: none;
   }
+
+  .globe-grid {
+    background:
+      repeating-linear-gradient(90deg, transparent 0 8.1%, rgb(255 255 255 / 0.09) 8.2% 8.35%, transparent 8.45% 16.6%),
+      repeating-linear-gradient(0deg, transparent 0 11%, rgb(255 255 255 / 0.08) 11.1% 11.25%, transparent 11.35% 22%);
+    mask-image: radial-gradient(circle, black 62%, transparent 72%);
+  }
 }
