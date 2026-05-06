@@ -5,6 +5,7 @@ export type Team = {
   name: string;
   countryCode: string;
   flag: string;
+  flagUrl: string;
   group: string;
   confederation: string;
   lat: number;
@@ -55,6 +56,16 @@ const flagFromCode = (countryCode: string) => {
     .split("")
     .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
     .join("");
+};
+
+const flagSlugByCode: Record<string, string> = {
+  ENG: "gb-eng",
+  SCO: "gb-sct",
+};
+
+const flagUrlFromCode = (countryCode: string) => {
+  const slug = flagSlugByCode[countryCode] ?? countryCode.toLowerCase().slice(0, 2);
+  return `https://flagcdn.com/w320/${slug}.png`;
 };
 
 const teamRows = [
@@ -164,6 +175,7 @@ export const teams: Team[] = teamRows.map(([id, name, countryCode, group, confed
   name,
   countryCode,
   flag: flagFromCode(countryCode),
+  flagUrl: flagUrlFromCode(countryCode),
   group,
   confederation,
   lat: teamLocations[id][0],

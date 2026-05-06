@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Globe2, RotateCcw, Share2, Trophy } from "lucide-react";
 import {
@@ -109,8 +110,8 @@ export function GlobeMatchupExperience() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030407] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgb(255_255_255_/_0.13),transparent_24rem),radial-gradient(circle_at_25%_50%,rgb(239_68_68_/_0.16),transparent_26rem),radial-gradient(circle_at_80%_72%,rgb(37_99_235_/_0.18),transparent_30rem)]" />
+    <main className="min-h-screen overflow-hidden bg-[#06101C] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgb(255_255_255_/_0.13),transparent_24rem),radial-gradient(circle_at_24%_48%,rgb(34_197_94_/_0.16),transparent_26rem),radial-gradient(circle_at_82%_68%,rgb(37_99_235_/_0.22),transparent_30rem),radial-gradient(circle_at_50%_95%,rgb(250_204_21_/_0.1),transparent_28rem)]" />
       <section className="relative mx-auto max-w-7xl px-4 py-5 md:px-8 md:py-8">
         <nav className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -135,14 +136,14 @@ export function GlobeMatchupExperience() {
 
         <div className="mb-6 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <div className="mb-4 inline-flex items-center rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-red-300">
+            <div className="mb-4 inline-flex items-center rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
               The globe is the matchup engine
             </div>
-            <h1 className="max-w-4xl text-4xl font-black leading-[0.98] tracking-tight md:text-7xl">
-              Travel through every pick.
+            <h1 className="max-w-4xl text-4xl font-black leading-[0.98] tracking-tight md:text-6xl">
+              2026 Global Soccer Bracket
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/58 md:text-lg">
-              One official group fixture at a time. Tap the winner, watch standings build, then advance through the knockout path to the champion.
+              Pick winners one match at a time. Group standings update automatically, then your knockout path builds toward a champion.
             </p>
           </div>
           <StageTabs activeStage={activeStage} onStageChange={setActiveStage} />
@@ -173,12 +174,12 @@ export function GlobeMatchupExperience() {
           </section>
 
           <aside className="h-fit rounded-[32px] border border-white/10 bg-white/[0.05] p-5 backdrop-blur lg:sticky lg:top-6">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-red-300">{stageLabels[activeStage]}</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">{stageLabels[activeStage]}</p>
             <h2 className="mt-2 text-3xl font-black tracking-tight">
               {completedCount}/{currentMatchups.length} picked
             </h2>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-red-500 to-white" style={{ width: `${currentMatchups.length ? (completedCount / currentMatchups.length) * 100 : 0}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-yellow-300" style={{ width: `${currentMatchups.length ? (completedCount / currentMatchups.length) * 100 : 0}%` }} />
             </div>
 
             {champion ? (
@@ -228,7 +229,7 @@ function GlobeMatchupCard({
 
       <div className="absolute left-4 right-4 top-4 z-20 flex items-center justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-red-300">{stageLabels[stage]}</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">{stageLabels[stage]}</p>
           <h2 className="mt-1 text-xl font-black text-white">
             {matchup.group ? `Group ${matchup.group}` : `Match ${matchup.position + 1}`}
           </h2>
@@ -268,17 +269,21 @@ function FlagPick({ team, selected, dimmed, onClick }: { team: Team; selected: b
       whileTap={{ scale: 0.97 }}
       className={cn(
         "group rounded-2xl border bg-black/70 p-2 text-center shadow-2xl backdrop-blur transition",
-        selected ? "border-red-400 shadow-[0_0_46px_rgb(239_68_68_/_0.45)]" : "border-white/15 hover:border-white/35",
+        selected ? "border-emerald-300 shadow-[0_0_46px_rgb(34_197_94_/_0.38)]" : "border-white/15 hover:border-white/35",
         dimmed && "opacity-40 grayscale",
       )}
     >
-      <div className="grid aspect-[4/3] place-items-center rounded-xl border border-white/15 bg-white text-5xl shadow-[inset_0_0_0_1px_rgb(0_0_0_/_0.08)] md:text-7xl">
-        {team.flag}
+      <div className="overflow-hidden rounded-xl border border-white/15 bg-white shadow-[inset_0_0_0_1px_rgb(0_0_0_/_0.08)]">
+        <FlagImage team={team} className="aspect-[4/3] w-full object-cover" />
       </div>
       <div className="mt-2 text-2xl font-black tracking-tight text-white md:text-4xl">{team.countryCode}</div>
       <div className="text-xs font-black uppercase tracking-wide text-white/45 md:text-sm">{team.name}</div>
     </motion.button>
   );
+}
+
+function FlagImage({ team, className }: { team: Team; className?: string }) {
+  return <Image src={team.flagUrl} alt={`${team.name} flag`} width={320} height={240} className={className} unoptimized priority />;
 }
 
 function GlobeVisual({ teamA, teamB }: { teamA: Team; teamB: Team }) {
@@ -327,7 +332,7 @@ function StandingsPanel({ standings }: { standings: Record<string, StandingRow[]
       <div className="space-y-3">
         {groups.slice(0, 4).map((group) => (
           <div key={group.id} className="rounded-2xl bg-white/[0.04] p-3">
-            <div className="mb-2 text-xs font-black uppercase tracking-wide text-red-300">Group {group.id}</div>
+            <div className="mb-2 text-xs font-black uppercase tracking-wide text-emerald-200">Group {group.id}</div>
             {standings[group.id].slice(0, 3).map((row) => (
               <div key={row.team.id} className="flex items-center justify-between py-1 text-sm">
                 <span className="font-bold text-white/75">{row.team.countryCode}</span>
