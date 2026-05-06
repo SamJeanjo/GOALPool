@@ -6,6 +6,10 @@ export type Team = {
   confederation: string;
   group: string;
   seed: number;
+  colors: {
+    primary: string;
+    secondary: string;
+  };
 };
 
 export type Group = {
@@ -90,40 +94,40 @@ export const tournament = {
 };
 
 const qualifiedTeams = [
-  ["can", "Canada", "CA", "🇨🇦", "CONCACAF"],
-  ["mex", "Mexico", "MX", "🇲🇽", "CONCACAF"],
-  ["usa", "United States", "US", "🇺🇸", "CONCACAF"],
-  ["arg", "Argentina", "AR", "🇦🇷", "CONMEBOL"],
-  ["bra", "Brazil", "BR", "🇧🇷", "CONMEBOL"],
-  ["uru", "Uruguay", "UY", "🇺🇾", "CONMEBOL"],
-  ["col", "Colombia", "CO", "🇨🇴", "CONMEBOL"],
-  ["ecu", "Ecuador", "EC", "🇪🇨", "CONMEBOL"],
-  ["par", "Paraguay", "PY", "🇵🇾", "CONMEBOL"],
-  ["jpn", "Japan", "JP", "🇯🇵", "AFC"],
-  ["kor", "South Korea", "KR", "🇰🇷", "AFC"],
-  ["irn", "Iran", "IR", "🇮🇷", "AFC"],
-  ["aus", "Australia", "AU", "🇦🇺", "AFC"],
-  ["uzb", "Uzbekistan", "UZ", "🇺🇿", "AFC"],
-  ["jor", "Jordan", "JO", "🇯🇴", "AFC"],
-  ["ksa", "Saudi Arabia", "SA", "🇸🇦", "AFC"],
-  ["qat", "Qatar", "QA", "🇶🇦", "AFC"],
-  ["mar", "Morocco", "MA", "🇲🇦", "CAF"],
-  ["tun", "Tunisia", "TN", "🇹🇳", "CAF"],
-  ["egy", "Egypt", "EG", "🇪🇬", "CAF"],
-  ["alg", "Algeria", "DZ", "🇩🇿", "CAF"],
-  ["gha", "Ghana", "GH", "🇬🇭", "CAF"],
-  ["cpv", "Cape Verde", "CV", "🇨🇻", "CAF"],
-  ["nzl", "New Zealand", "NZ", "🇳🇿", "OFC"],
+  ["can", "Canada", "CA", "🇨🇦", "CONCACAF", "#E21B2D", "#FFFFFF"],
+  ["mex", "Mexico", "MX", "🇲🇽", "CONCACAF", "#006847", "#CE1126"],
+  ["usa", "United States", "US", "🇺🇸", "CONCACAF", "#1D4ED8", "#DC2626"],
+  ["arg", "Argentina", "AR", "🇦🇷", "CONMEBOL", "#75AADB", "#F6C453"],
+  ["bra", "Brazil", "BR", "🇧🇷", "CONMEBOL", "#16A34A", "#FACC15"],
+  ["uru", "Uruguay", "UY", "🇺🇾", "CONMEBOL", "#60A5FA", "#FFFFFF"],
+  ["col", "Colombia", "CO", "🇨🇴", "CONMEBOL", "#FACC15", "#2563EB"],
+  ["ecu", "Ecuador", "EC", "🇪🇨", "CONMEBOL", "#FACC15", "#EF4444"],
+  ["par", "Paraguay", "PY", "🇵🇾", "CONMEBOL", "#DC2626", "#2563EB"],
+  ["jpn", "Japan", "JP", "🇯🇵", "AFC", "#1D4ED8", "#EF4444"],
+  ["kor", "South Korea", "KR", "🇰🇷", "AFC", "#DC2626", "#1D4ED8"],
+  ["irn", "Iran", "IR", "🇮🇷", "AFC", "#16A34A", "#EF4444"],
+  ["aus", "Australia", "AU", "🇦🇺", "AFC", "#FACC15", "#16A34A"],
+  ["uzb", "Uzbekistan", "UZ", "🇺🇿", "AFC", "#22C55E", "#38BDF8"],
+  ["jor", "Jordan", "JO", "🇯🇴", "AFC", "#EF4444", "#16A34A"],
+  ["ksa", "Saudi Arabia", "SA", "🇸🇦", "AFC", "#15803D", "#FFFFFF"],
+  ["qat", "Qatar", "QA", "🇶🇦", "AFC", "#8A1538", "#FFFFFF"],
+  ["mar", "Morocco", "MA", "🇲🇦", "CAF", "#C1272D", "#16A34A"],
+  ["tun", "Tunisia", "TN", "🇹🇳", "CAF", "#E70013", "#FFFFFF"],
+  ["egy", "Egypt", "EG", "🇪🇬", "CAF", "#CE1126", "#111827"],
+  ["alg", "Algeria", "DZ", "🇩🇿", "CAF", "#16A34A", "#FFFFFF"],
+  ["gha", "Ghana", "GH", "🇬🇭", "CAF", "#FACC15", "#16A34A"],
+  ["cpv", "Cape Verde", "CV", "🇨🇻", "CAF", "#2563EB", "#FACC15"],
+  ["nzl", "New Zealand", "NZ", "🇳🇿", "OFC", "#111827", "#FFFFFF"],
 ] as const;
 
 const placeholders = Array.from({ length: 24 }, (_, index) => {
   const number = index + 1;
-  return [`q${number}`, `Qualifier ${number}`, `Q${number}`, "◆", "TBD"] as const;
+  return [`q${number}`, `Qualifier ${number}`, `Q${number}`, "◆", "TBD", "#64748B", "#E2E8F0"] as const;
 });
 
 // Team list and groups should be updated when the official final tournament draw is available.
 export const teams: Team[] = [...qualifiedTeams, ...placeholders].map(
-  ([id, name, countryCode, flagEmoji, confederation], index) => ({
+  ([id, name, countryCode, flagEmoji, confederation, primary, secondary], index) => ({
     id,
     name,
     countryCode,
@@ -131,6 +135,10 @@ export const teams: Team[] = [...qualifiedTeams, ...placeholders].map(
     confederation,
     group: String.fromCharCode(65 + Math.floor(index / 4)),
     seed: index + 1,
+    colors: {
+      primary,
+      secondary,
+    },
   }),
 );
 
