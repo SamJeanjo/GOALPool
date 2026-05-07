@@ -30,7 +30,7 @@ import { EarthGlobePreview } from "./EarthGlobePreview";
 type RankKey = "first" | "second" | "third";
 type GroupSelection = Record<string, { first?: string; second?: string; third?: string }>;
 type PickMap = Record<string, string>;
-type BracketStatus = "incomplete" | "draft" | "locked";
+type BracketStatus = "incomplete" | "draft" | "ready" | "locked" | "live";
 type MainSection = "dashboard" | "picks" | "bracket" | "friends" | "leaderboard" | "settings";
 type PickStage = StageKey | "review";
 
@@ -52,6 +52,7 @@ type Invite = {
 const stageOrder: PickStage[] = ["groups", "r32", "r16", "qf", "sf", "final", "review"];
 const knockoutStages: Exclude<StageKey, "groups">[] = ["r32", "r16", "qf", "sf", "final"];
 const lockDeadline = new Date("2026-06-10T23:59:59-04:00");
+const firstMatchAt = new Date("2026-06-11T15:00:00-04:00");
 
 const scoringConfig = {
   groupFirst: 3,
@@ -111,7 +112,6 @@ export function GlobeMatchupExperience() {
 
   const autoLocked = new Date() > lockDeadline;
   const locked = status === "locked" || autoLocked;
-  const effectiveStatus: BracketStatus = locked ? "locked" : status;
 
   const standings = useMemo(() => calculateStandings(groupSelections), [groupSelections]);
   const r32 = useMemo(() => buildRoundOf32FromStandings(standings), [standings]);
@@ -124,6 +124,7 @@ export function GlobeMatchupExperience() {
   const sfWinners = winnersFor(sf, knockoutPicks);
   const final = useMemo(() => buildNextRound("final", sfWinners), [sfWinners]);
   const champion = winnersFor(final, knockoutPicks)[0];
+  const effectiveStatus: BracketStatus = new Date() >= firstMatchAt && locked ? "live" : locked ? "locked" : champion ? "ready" : status;
 
   const matchupsByStage = { r32, r16, qf, sf, final };
   const groupProgress = getGroupProgress(groupSelections);
@@ -195,7 +196,7 @@ export function GlobeMatchupExperience() {
   };
 
   const saveDraft = () => {
-    const nextStatus: BracketStatus = completion.requiredStarted ? "draft" : "incomplete";
+    const nextStatus: BracketStatus = champion ? "ready" : completion.requiredStarted ? "draft" : "incomplete";
     setStatus(nextStatus);
     persistMockBracket(nextStatus, lockedAt, champion, stats);
     showMessage(nextStatus === "draft" ? "Draft saved. You can keep editing until lock." : "Start your picks before saving a draft.");
@@ -211,7 +212,7 @@ export function GlobeMatchupExperience() {
     setLockedAt(time);
     setShowLockConfirm(false);
     persistMockBracket("locked", time, champion, stats);
-    setSection("dashboard");
+    setSection("bracket");
     showMessage("Bracket locked. Your dashboard is ready.");
   };
 
@@ -487,7 +488,12 @@ function PickView({
               <button type="button" onClick={onSave} className="min-h-12 rounded-full border border-white/10 bg-white/[0.06] px-5 text-sm font-black text-white transition hover:bg-white/[0.1]">
                 Save Draft
               </button>
-              <button type="button" onClick={onContinue} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-[#06101C]">
+              <button
+                type="button"
+                onClick={onContinue}
+                disabled={!activeProgress.complete}
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-[#06101C] transition disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+              >
                 Continue
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -589,7 +595,12 @@ function GroupStagePanel({
 
 function GroupRankCard({ team, rank, locked, onRankPick }: { team: Team; rank?: RankKey; locked: boolean; onRankPick: (rank: RankKey) => void }) {
   return (
-    <motion.div layout className={cn("rounded-2xl border bg-black/66 p-3 backdrop-blur transition", rankClass(rank), locked && "opacity-80")}>
+    <motion.div
+      layout
+      animate={{ y: rank ? -6 : 0, scale: rank ? 1.02 : 1 }}
+      transition={{ type: "spring", stiffness: 360, damping: 28 }}
+      className={cn("rounded-2xl border bg-black/66 p-3 backdrop-blur transition", rankClass(rank), locked && "opacity-80")}
+    >
       <div className="flex items-center gap-2">
         <FlagImage team={team} className="h-8 w-11 rounded-md object-cover" />
         <div className="min-w-0">
@@ -778,6 +789,12 @@ function DashboardView({ status, champion, stats, nextImpact, setSection, locked
           <MetricCard label="Prediction %" value={`${stats.predictionPercentage}%`} />
           <MetricCard label="Correct picks" value={stats.correct} />
           <MetricCard label="Missed picks" value={stats.missed} />
+        </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-4">
+          <MetricCard label="Current rank" value="#2" />
+          <MetricCard label="Pool-winning chance" value={`${Math.min(94, Math.max(8, stats.predictionPercentage + 18))}%`} />
+          <MetricCard label="Perfect bracket" value={stats.missed === 0 && stats.correct > 0 ? "Alive" : "Broken"} />
+          <MetricCard label="Friends pool" value="5 users" />
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5">
@@ -1050,8 +1067,19 @@ function MetricCard({ label, value }: { label: string; value: string | number })
 
 function StatusPill({ status, lockedAt }: { status: BracketStatus; lockedAt?: string }) {
   return (
-    <div className={cn("inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-black", status === "locked" ? "border-[#F7D774]/30 bg-[#F7D774]/12 text-[#F7D774]" : status === "draft" ? "border-sky-300/25 bg-sky-300/10 text-sky-100" : "border-white/10 bg-white/[0.06] text-white/55")}>
-      {status === "locked" ? <Lock className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+    <div
+      className={cn(
+        "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-black",
+        status === "locked" || status === "live"
+          ? "border-[#F7D774]/30 bg-[#F7D774]/12 text-[#F7D774]"
+          : status === "ready"
+            ? "border-emerald-300/30 bg-emerald-300/12 text-emerald-100"
+            : status === "draft"
+              ? "border-sky-300/25 bg-sky-300/10 text-sky-100"
+              : "border-white/10 bg-white/[0.06] text-white/55",
+      )}
+    >
+      {status === "locked" || status === "live" ? <Lock className="h-4 w-4" /> : status === "ready" ? <ShieldCheck className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
       {statusLabel(status)}
       {lockedAt ? <span className="hidden text-white/35 md:inline">· {new Date(lockedAt).toLocaleDateString()}</span> : null}
     </div>
@@ -1307,7 +1335,9 @@ function persistMockBracket(status: BracketStatus, lockedAt: string | undefined,
 }
 
 function statusLabel(status: BracketStatus) {
+  if (status === "live") return "Live";
   if (status === "locked") return "Locked";
+  if (status === "ready") return "Ready to Lock";
   if (status === "draft") return "Draft";
   return "Incomplete";
 }
